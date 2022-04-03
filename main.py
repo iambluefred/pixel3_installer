@@ -147,7 +147,6 @@ def install_userspace():
 
 
 def print_sep():
-
     print(100 * "#")
     print(100 * "#")
 
