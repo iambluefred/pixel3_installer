@@ -5,7 +5,8 @@
 - run ```sudo ./main.py``` and follow the instructions.
 
 
-## Unlock Bootloader
+## Prerequisite
+### Unlock Bootloader
 
 - Go to Settings > About Phone
 - Tap Software Info > Build Number
@@ -16,7 +17,7 @@
 - Enter Fastboot Mode
 - Run ```fastboot flashing unlock```
 
-## Wipe Data
+### Wipe Data (optional)
 - Download TWRP-3.3.0 https://eu.dl.twrp.me/blueline/twrp-3.3.0-0-blueline.img.html
 - Enter Fastboot Mode
 - Run ```fastboot boot twrp-3.3.0-0-blueline.img```
