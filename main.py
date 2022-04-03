@@ -176,7 +176,7 @@ def run():
     print_sep()
     _ = input('Open Magisk > Superuser and enable Superuser rights of Shell\n'
               'Press [ENTER] when you are done.')
-    #install_userspace()
+    install_userspace()
 
 
 if __name__ == '__main__':
