@@ -46,11 +46,8 @@ def download_blueline():
     if not Path(BASE, file).is_file():
         run_cmd(f'wget https://dl.google.com/dl/android/aosp/blueline-pq3a.190801.002-factory-f3d66c49.zip')
 
-    if Path(BASE, folder).is_dir():
-        shutil.rmtree(Path(BASE, folder))
-
-    run_cmd(f'unzip {Path(BASE, file)}')
-
+    if not Path(BASE, folder).is_dir():
+        run_cmd(f'unzip {Path(BASE, file)}')
 
 def install_blueline():
     folder = 'blueline-pq3a.190801.002'
@@ -117,13 +114,33 @@ def install_userspace():
                         b"apt-get install gawk findutils\n"
                         b"chmod 644 /data/data/com.termux/files/home/.ssh/config\n"
                         b"chown root:root /data/data/com.termux/files/home/.ssh/config\n"
-                        b"./install.sh")
+                        b"./install.sh\n"
+                        b"touch /EON\n"
+                        b"cd /data\n"
+                        b"git clone https://github.com/commaai/openpilot.git --recurse-submodules -b pixel3\n"
+                        b"cd openpilot\n"
+                        b"scons -j4\n"
+                        b"cp /data/openpilot/third_party/qt-plugins/aarch64/libqeglfs-surfaceflinger-integration.so /usr/libexec/qt/egldeviceintegrations/\n"
+                        b"./launch_openpilot.sh\n")
 
 if __name__ == '__main__':
+    _ = input('Make sure your Bootloader is unlocked.\n'
+              'Boot the phone to Android and make sure USB debugging (ADB) is activated!\n'
+              'Press [ENTER] to confirm.')
     install_deps()
-    # download_blueline()
-    #install_blueline()
-    #root_phone()
+    download_blueline()
+    install_blueline()
+    _ = input('WAIT UNTIL YOUR PHONE IS BOOTED!\n'
+              '1.) Setup your Phone and connect to WIFI\n'
+              '2.) Go to Settings > About Phone\n'
+              '3.) Tap Software Info > Build Number\n'
+              '4.) Tap Build Number seven times\n'
+              '5.) Go to Settings > System > Advanced > Developer Options and enable USB debugging\n'
+              'Press [ENTER] to confirm.')
+    root_phone()
+    _ = input('WAIT UNTIL YOUR PHONE IS BOOTED!\n'
+              'Press [ENTER] to confirm.')
     adb_superuser()
-    time.sleep(30)
+    _ = input('Open Magisk > Superuser and enable Superuser rights of Shell\n'
+              'Press [ENTER] to confirm.')
     install_userspace()
