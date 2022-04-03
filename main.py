@@ -176,6 +176,10 @@ def run():
     print_sep()
     _ = input('Open Magisk > Superuser and enable Superuser rights of Shell\n'
               'Press [ENTER] when you are done.')
+    print_sep()
+    print("Installing userspace & openpilot".upper())
+    print("This process takes about 45 minutes".upper())
+    print_sep()
     install_userspace()
 
 
