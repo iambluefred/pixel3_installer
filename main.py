@@ -71,7 +71,6 @@ def download_blueline():
 
 def install_blueline():
     adb_reboot_bootloader()
-    _subprocess([fastboot_path, 'erase', 'data'])
     folder = 'blueline-pq3a.190801.002'
     bootloader_img = Path(BASE, folder, 'bootloader-blueline-b1c1-0.1-5578427.img')
     _subprocess([fastboot_path, 'flash', 'bootloader', bootloader_img])
