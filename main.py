@@ -1,57 +1,129 @@
 import os
+import shutil
+import subprocess
+import time
 from pathlib import Path
-import os, subprocess
-from subprocess import PIPE, Popen
 
 BASE = os.getcwd()
+fastboot_path = '/home/lukas/Downloads/eon-neos-master/platform-tools/fastboot'
+adb_path = '/home/lukas/Downloads/eon-neos-master/platform-tools/adb'
 
 
 def goto_base():
     run_cmd(f'cd {BASE}')
 
 
+def adb_reboot_bootloader():
+    run_cmd('adb reboot bootloader')
+    time.sleep(8)
+
+
+def fastboot_reboot_bootloader():
+    _subprocess([fastboot_path, 'reboot-bootloader'])
+    time.sleep(5)
+
+
+def _subprocess(arg_list):
+    arg_list = [str(s) for s in arg_list]
+    print("RUN " + " ".join(arg_list))
+    return subprocess.check_output(arg_list)
+
+
 def run_cmd(cmd: str):
+    print(f"RUN {cmd}")
     os.system(cmd)
 
 
 def install_deps():
-    cmd_apt = 'sudo apt install -y wget'
+    cmd_apt = 'sudo apt install -y wget android-tools-adb'
     run_cmd(cmd_apt)
 
 
-def install_blueline():
+def download_blueline():
     file = 'blueline-pq3a.190801.002-factory-f3d66c49.zip'
     folder = 'blueline-pq3a.190801.002'
 
     if not Path(BASE, file).is_file():
-        run_cmd(f'wget https://dl.google.com/dl/android/aosp/{file}')
+        run_cmd(f'wget https://dl.google.com/dl/android/aosp/blueline-pq3a.190801.002-factory-f3d66c49.zip')
 
-    if not Path(BASE, folder).is_dir():
-        run_cmd(f'unzip {file}')
+    if Path(BASE, folder).is_dir():
+        shutil.rmtree(Path(BASE, folder))
 
-    run_cmd(f'{BASE}/{folder}/flash-all.sh')
+    run_cmd(f'unzip {Path(BASE, file)}')
+
+
+def install_blueline():
+    folder = 'blueline-pq3a.190801.002'
+    adb_reboot_bootloader()
+    bootloader_img = Path(BASE, folder, 'bootloader-blueline-b1c1-0.1-5578427.img')
+    _subprocess([fastboot_path, 'flash', 'bootloader', bootloader_img])
+    fastboot_reboot_bootloader()
+    radio_img = Path(BASE, folder, 'radio-blueline-g845-00017-190312-b-5369743.img')
+    _subprocess([fastboot_path, 'flash', 'radio', radio_img])
+    fastboot_reboot_bootloader()
+    update_img = Path(BASE, folder, "image-blueline-pq3a.190801.002.zip")
+    _subprocess([fastboot_path, '-w','update', update_img])
 
 
 def root_phone():
-    run_cmd(
-        'wget https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_arm64-v8a.apk')
-    run_cmd('wget https://github.com/topjohnwu/Magisk/releases/download/v24.2/Magisk-v24.2.apk')
+    if not Path(BASE, "termux-app_v0.118.0+github-debug_arm64-v8a.apk").is_file():
+        run_cmd(
+            'wget https://github.com/termux/termux-app/releases/download/v0.118.0/termux-app_v0.118.0+github-debug_arm64-v8a.apk')
+    if not Path(BASE, "Magisk-v24.2.apk").is_file():
+        run_cmd('wget https://github.com/topjohnwu/Magisk/releases/download/v24.2/Magisk-v24.2.apk')
+
     run_cmd('adb install termux-app_v0.118.0+github-debug_arm64-v8a.apk')
     run_cmd('adb install Magisk-v24.2.apk')
-    run_cmd('adb reboot bootloader')
-    run_cmd('fastboot flash boot boot_magisk_patched.img')
-    run_cmd('fastboot reboot')
+    adb_reboot_bootloader()
+    _subprocess([fastboot_path, 'flash', 'boot', 'boot_magisk_patched.img'])
+    _subprocess([fastboot_path, 'reboot'])
 
+def adb_superuser():
+    process = subprocess.Popen(
+        "adb shell",
+        shell=True,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE
+    )
+    process.communicate(b"su\n")
 
 def install_userspace():
-    run_cmd(f'adb push {BASE}/userspace.tar.gz /sdcard/Download/')
+    file = 'userspace.tar.gz'
+    if not Path(BASE, file).is_file():
+        print(file)
+        # run_cmd(f'wget https://dl.google.com/dl/android/aosp/{file}')
 
-    adb_shell = subprocess.Popen('adb shell', stdin=subprocess.PIPE)
-    adb_shell.communicate(
-        "su\ncd /data/data/com.termux/\nmkkdir files && cd files\ntar xvf /sdcard/Download/userspace.tar.gz\nmount -o remount,rw /dev/root /\nln -s /data/data/com.termux/files/usr /usr\nexit\nsu -c 'HOME=/data/data/com.termux/files/home PATH=\"/data/data/com.termux/files/usr/bin:/bin\" LD_LIBRARY_PATH=\"/data/data/com.termux/files/usr/lib\" bash'\nmkdir -p tmp && mount -t tmpfs -o size=2048M tmpfs /tmp\ncd ~\ntmux\napt-get update\napt-get install gawk findutils\nchmod 644 /data/data/com.termux/files/home/.ssh/config\nchown root:root /data/data/com.termux/files/home/.ssh/config\n./install.sh")
+    #run_cmd(f'adb push {BASE}/{file} /sdcard/Download/')
 
+
+    process = subprocess.Popen(
+        "adb shell",
+        shell=True,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE
+    )
+    process.communicate(b"su\n"
+                        b"cd /data/data/com.termux/\n"
+                        b"mkdir files && cd files\n"
+                        b"tar xvf /sdcard/Download/userspace.tar.gz\n"
+                        b"mount -o remount,rw /dev/root /\n"
+                        b"ln -s /data/data/com.termux/files/usr /usr\n"
+                        b"exit\n"
+                        b"su -c 'HOME=/data/data/com.termux/files/home PATH=\"/data/data/com.termux/files/usr/bin:/bin\" LD_LIBRARY_PATH=\"/data/data/com.termux/files/usr/lib\" bash'\n"
+                        b"mkdir -p tmp && mount -t tmpfs -o size=2048M tmpfs /tmp\n"
+                        b"cd ~\n"
+                        b"tmux\n"
+                        b"apt-get update\n"
+                        b"apt-get install gawk findutils\n"
+                        b"chmod 644 /data/data/com.termux/files/home/.ssh/config\n"
+                        b"chown root:root /data/data/com.termux/files/home/.ssh/config\n"
+                        b"./install.sh")
 
 if __name__ == '__main__':
     install_deps()
-    install_blueline()
-    root_phone()
+    # download_blueline()
+    #install_blueline()
+    #root_phone()
+    adb_superuser()
+    time.sleep(30)
+    install_userspace()
