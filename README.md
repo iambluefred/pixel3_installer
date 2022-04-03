@@ -1,4 +1,4 @@
-# Openpilot Pixel3 Installer
+# Openpilot Pixel3 Installer (for Ubuntu)
 
 ## Run Installer
 - clone ```https://github.com/lukasloetkolben/pixel3_installer.git && cd pixel3_installer```
