@@ -2,6 +2,7 @@
 
 ## Run Installer
 - clone ```https://github.com/lukasloetkolben/pixel3_installer.git && cd pixel3_installer```
+- Boot your phone to System and connect USB
 - run ```sudo ./main.py``` and follow the instructions.
 
 
