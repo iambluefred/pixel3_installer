@@ -1,6 +1,7 @@
 import os
 import subprocess
 import time
+import traceback
 from pathlib import Path
 
 # URLs
@@ -10,6 +11,7 @@ magisk_apk_url = "https://github.com/topjohnwu/Magisk/releases/download/v24.2/Ma
 patched_boot_img_url = "https://transfer.sh/ormqXH/boot_magisk_patched.img"
 userspace_url = "https://transfer.sh/LVVEJE/userspace.tar.gz"
 platform_tools_url = "https://dl.google.com/android/repository/platform-tools_r29.0.5-linux.zip"
+twrp_url = "https://eu.dl.twrp.me/blueline/twrp-3.2.3-0-blueline.img"
 
 BASE = os.getcwd()
 
@@ -28,8 +30,25 @@ def download_platform_tools():
     global fastboot_path
     fastboot_path = Path(BASE, folder, "fastboot")
 
+
 def goto_base():
     run_cmd(f'cd {BASE}')
+
+
+def wait_for_adb_devices():
+    while True:
+        time.sleep(2)
+        x = subprocess.check_output(['adb', 'devices'])
+        if "tdevice" in str(x):
+            return
+
+
+def wait_for_fastboot_devices():
+    while True:
+        time.sleep(2)
+        x = subprocess.check_output([fastboot_path, 'devices'])
+        if "tfastboot" in str(x):
+            return
 
 
 def adb_reboot_bootloader():
@@ -39,7 +58,7 @@ def adb_reboot_bootloader():
 
 def fastboot_reboot_bootloader():
     _subprocess([fastboot_path, 'reboot-bootloader'])
-    time.sleep(5)
+    time.sleep(8)
 
 
 def _subprocess(arg_list):
@@ -51,6 +70,15 @@ def _subprocess(arg_list):
 def run_cmd(cmd: str):
     print(f"RUN {cmd}")
     os.system(cmd)
+
+
+def boot_twrp():
+    adb_reboot_bootloader()
+    if not Path(BASE, "twrp-3.2.3-0-blueline.img").is_file():
+        run_cmd(f'wget {twrp_url}')
+
+    _subprocess([fastboot_path, 'boot', 'twrp-3.2.3-0-blueline.img'])
+    wait_for_adb_devices()
 
 
 def install_deps():
@@ -78,7 +106,6 @@ def install_blueline():
     radio_img = Path(BASE, folder, 'radio-blueline-g845-00017-190312-b-5369743.img')
     _subprocess([fastboot_path, 'flash', 'radio', radio_img])
     fastboot_reboot_bootloader()
-
     update_img = Path(BASE, folder, "image-blueline-pq3a.190801.002.zip")
     _subprocess([fastboot_path, '-w', 'update', update_img])
 
@@ -88,19 +115,22 @@ def root_phone():
         run_cmd(f'wget {termux_apk_url}')
     if not Path(BASE, "Magisk-v24.2.apk").is_file():
         run_cmd(f'wget {magisk_apk_url}')
-
+    wait_for_adb_devices()
     run_cmd('adb install termux-app_v0.118.0+github-debug_arm64-v8a.apk')
+    wait_for_adb_devices()
     run_cmd('adb install Magisk-v24.2.apk')
     adb_reboot_bootloader()
 
     if not Path(BASE, "boot_magisk_patched.img").is_file():
         run_cmd(f'wget {patched_boot_img_url}')
-
+    wait_for_fastboot_devices()
     _subprocess([fastboot_path, 'flash', 'boot', 'boot_magisk_patched.img'])
     _subprocess([fastboot_path, 'reboot'])
 
 
 def adb_superuser():
+    wait_for_adb_devices()
+    time.sleep(5)
     process = subprocess.Popen(
         "adb shell",
         shell=True,
@@ -150,12 +180,11 @@ def print_sep():
     print(100 * "#")
     print(100 * "#")
 
+
 def run():
     download_platform_tools()
-    print_sep()
-    _ = input('Make sure your Bootloader is unlocked.\n'
-              'Boot the phone to Android and make sure USB debugging (ADB) is activated!\n'
-              'Press [ENTER] to confirm.')
+    print("WAIT FOR ADB DEVICE...")
+    wait_for_adb_devices()
     install_deps()
     download_blueline()
     install_blueline()
@@ -168,9 +197,6 @@ def run():
               '5.) Go to Settings > System > Advanced > Developer Options and enable USB debugging\n'
               'Press [ENTER] when you are done.')
     root_phone()
-    print_sep()
-    _ = input('WAIT UNTIL YOUR PHONE IS BOOTED!\n'
-              'Press [ENTER] when the phone has booted.')
     adb_superuser()
     print_sep()
     _ = input('Open Magisk > Superuser and enable Superuser rights of Shell\n'
@@ -179,7 +205,7 @@ def run():
     print("Installing userspace & openpilot".upper())
     print("This process takes about 45 minutes".upper())
     print_sep()
-    install_userspace()
+    #install_userspace()
 
 
 if __name__ == '__main__':
