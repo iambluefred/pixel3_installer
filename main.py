@@ -147,12 +147,12 @@ def install_userspace():
 
     run_cmd(f'adb push {BASE}/{file} /sdcard/Download/')
 
-    process = subprocess.Popen(
-        "adb shell",
-        shell=True,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE
-    )
+    # process = subprocess.Popen(
+    #     "adb shell",
+    #     shell=True,
+    #     stdin=subprocess.PIPE,
+    #     stdout=subprocess.PIPE
+    # )
     # process.communicate(b"su\n"
     #                     b"mkdir /data/data/com.termux/files/\n"
     #                     b"tar -xvzf /sdcard/Download/userspace.tar.gz -C /data/data/com.termux/files\n"
