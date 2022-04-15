@@ -205,7 +205,7 @@ def run():
     print("Installing userspace & openpilot".upper())
     print("This process takes about 45 minutes".upper())
     print_sep()
-    #install_userspace()
+    install_userspace()
 
 
 if __name__ == '__main__':
