@@ -123,27 +123,27 @@ def install_userspace():
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE
     )
-    process.communicate(b"su\n"
-                        b"mkdir /data/data/com.termux/files/\n"
-                        b"tar -xvzf /sdcard/Download/userspace.tar.gz -C /data/data/com.termux/files\n"
-                        b"mount -o remount,rw /dev/root /\n"
-                        b"ln -s /data/data/com.termux/files/usr /usr\n"
-                        b"exit\n"
-                        b"su -c 'HOME=/data/data/com.termux/files/home PATH=\"/data/data/com.termux/files/usr/bin:/bin\" LD_LIBRARY_PATH=\"/data/data/com.termux/files/usr/lib\" bash'\n"
-                        b"mkdir -p /tmp\n"
-                        b"mount -t tmpfs -o size=2048M tmpfs /tmp\n"
-                        b"tmux\n"
-                        b"apt-get update\n"
-                        b"apt-get install gawk findutils\n"
-                        b"chmod 644 /data/data/com.termux/files/home/.ssh/config\n"
-                        b"chown root:root /data/data/com.termux/files/home/.ssh/config\n"
-                        b"/data/data/com.termux/files/home/install.sh\n"
-                        b"touch /EON\n"
-                        b"git clone https://github.com/commaai/openpilot.git /data/openpilot --recurse-submodules -b pixel3\n"
-                        b"cd openpilot\n"
-                        b"scons -j4\n"
-                        b"cp /data/openpilot/third_party/qt-plugins/aarch64/libqeglfs-surfaceflinger-integration.so /usr/libexec/qt/egldeviceintegrations/\n"
-                        b"./launch_openpilot.sh\n")
+    # process.communicate(b"su\n"
+    #                     b"mkdir /data/data/com.termux/files/\n"
+    #                     b"tar -xvzf /sdcard/Download/userspace.tar.gz -C /data/data/com.termux/files\n"
+    #                     b"mount -o remount,rw /dev/root /\n"
+    #                     b"ln -s /data/data/com.termux/files/usr /usr\n"
+    #                     b"exit\n"
+    #                     b"su -c 'HOME=/data/data/com.termux/files/home PATH=\"/data/data/com.termux/files/usr/bin:/bin\" LD_LIBRARY_PATH=\"/data/data/com.termux/files/usr/lib\" bash'\n"
+    #                     b"mkdir -p /tmp\n"
+    #                     b"mount -t tmpfs -o size=2048M tmpfs /tmp\n"
+    #                     b"tmux\n"
+    #                     b"apt-get update\n"
+    #                     b"apt-get install gawk findutils\n"
+    #                     b"chmod 644 /data/data/com.termux/files/home/.ssh/config\n"
+    #                     b"chown root:root /data/data/com.termux/files/home/.ssh/config\n"
+    #                     b"/data/data/com.termux/files/home/install.sh\n"
+    #                     b"touch /EON\n"
+    #                     b"git clone https://github.com/commaai/openpilot.git /data/openpilot --recurse-submodules -b pixel3\n"
+    #                     b"cd openpilot\n"
+    #                     b"scons -j4\n"
+    #                     b"cp /data/openpilot/third_party/qt-plugins/aarch64/libqeglfs-surfaceflinger-integration.so /usr/libexec/qt/egldeviceintegrations/\n"
+    #                     b"./launch_openpilot.sh\n")
 
 
 def print_sep():
